@@ -256,3 +256,165 @@ toggleBtn.addEventListener('click', function () {
     </style>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini Chat Widget</title>
+  <style>
+    @keyframes bounce-glow {
+      0%, 100% {
+        transform: translateY(0);
+        box-shadow: 0 0 10px #00f2ff, 0 0 20px #00f2ff;
+      }
+      50% {
+        transform: translateY(-10px);
+        box-shadow: 0 0 20px #00f2ff, 0 0 40px #00f2ff;
+      }
+    }
+
+    #gemini-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      font-size: 28px;
+      background-color: #00f2ff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 9999;
+      animation: bounce-glow 2s infinite ease-in-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px #00f2ff;
+      transition: transform 0.3s ease;
+    }
+
+    #gemini-button:hover {
+      transform: scale(1.2);
+    }
+
+    #chat-box {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      max-height: 500px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      z-index: 9998;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #chat-header {
+      background: #007BFF;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 10px 10px 0 0;
+    }
+
+    #chat-messages {
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
+    #chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #eee;
+    }
+
+    #chat-question {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #send-btn {
+      margin-left: 5px;
+      padding: 8px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+
+<!-- Nút 🤖 bật/tắt chat -->
+<button id="gemini-button" title="Trợ lý AI Gemini">🤖</button>
+
+<!-- Khung chat -->
+<div id="chat-box">
+  <div id="chat-header">💬 Gemini AI</div>
+  <div id="chat-messages">
+    <div><i>🤖 Xin chào! Bạn cần hỏi gì hôm nay?</i></div>
+  </div>
+  <div id="chat-input">
+    <input type="text" id="chat-question" placeholder="Nhập câu hỏi...">
+    <button id="send-btn">Gửi</button>
+  </div>
+</div>
+
+<script type="module">
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+const apiKey = "AIzaSyD0ARz3_JsEmCm8qDO9DA3n47p6je4M3Xk";
+const genAI = new GoogleGenerativeAI(apiKey);
+
+window.addEventListener("DOMContentLoaded", () => {
+  const chatBox = document.getElementById("chat-box");
+  const toggleButton = document.getElementById("gemini-button");
+  const input = document.getElementById("chat-question");
+  const sendBtn = document.getElementById("send-btn");
+  const messages = document.getElementById("chat-messages");
+
+  toggleButton.addEventListener("click", () => {
+    chatBox.style.display = chatBox.style.display === "none" ? "flex" : "none";
+  });
+
+  async function sendToGemini() {
+    const question = input.value.trim();
+    if (!question) return;
+
+    messages.innerHTML += `<div><b>Bạn:</b> ${question}</div>`;
+    input.value = "...";
+
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(question);
+      const response = await result.response;
+      const text = response.text();
+
+      messages.innerHTML += `<div><b>🤖 Gemini:</b> ${text}</div>`;
+    } catch (e) {
+      messages.innerHTML += `<div><b>🤖 Lỗi:</b> Không thể trả lời.</div>`;
+    }
+
+    input.value = "";
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  sendBtn.addEventListener("click", sendToGemini);
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendToGemini();
+    }
+  });
+});
+</script>
+
